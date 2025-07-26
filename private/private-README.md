@@ -28,7 +28,7 @@ nix-shell --pure -p nix
 nix run github:ibizaman/skarabox#init
 
 # Use a different path - e.g. for a local fork
-nix run github:ibizaman/skarabox#init -- --path /path/to/skarabox
+nix run github:ibizaman/skarabox#init -- --p /skarabox
 
 # TODO: Not sure what `@VERSION@` should be replaced with.
 # TODO: Need to create a pure nix shell to avoid path conflicts.
@@ -53,7 +53,10 @@ echo x86_64-linux > myskarabox/system
 # Option A: Using Nix (Linux systems)
 nix run .#myskarabox-gen-knownhosts-file
 
-# Option B: Manual (macOS/cross-platform fallback)
+# Option B: Using forked Skarabox (macOS-compatible)
+nix run github:ibizaman/skarabox#myskarabox-gen-knownhosts-file -- -p /skarabox
+
+# Option C: Manual (universal fallback)
 echo "[$(cat ./myskarabox/ip)]:22 $(cat ./myskarabox/host_key.pub | cut -d' ' -f1-2)" > ./myskarabox/known_hosts
 echo "[$(cat ./myskarabox/ip)]:2222 $(cat ./myskarabox/host_key.pub | cut -d' ' -f1-2)" >> ./myskarabox/known_hosts
 ```
@@ -65,7 +68,10 @@ Detect server hardware configuration:
 # Option A: Using Nix command
 nix run .#myskarabox-get-facter > ./myskarabox/facter.json
 
-# Option B: Manual SSH (for cross-platform issues)
+# Option B: Using forked Skarabox (macOS-compatible)
+nix run github:ibizaman/skarabox#myskarabox-get-facter -- -p /skarabox > ./myskarabox/facter.json
+
+# Option C: Manual SSH (universal fallback)
 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=./myskarabox/known_hosts -p 22 root@$(cat ./myskarabox/ip) sudo nixos-facter > ./myskarabox/facter.json
 ```
 
