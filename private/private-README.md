@@ -65,14 +65,15 @@ echo "[$(cat ./myskarabox/ip)]:2222 $(cat ./myskarabox/host_key.pub | cut -d' ' 
 Detect server hardware configuration:
 
 ```bash
-# Option A: Using Nix command
+# Option A: Using Nix command - this doesn't work on macOS due to cross-platform issues
 nix run .#myskarabox-get-facter > ./myskarabox/facter.json
 
-# Option B: Using forked Skarabox (macOS-compatible)
+# Option B: Using forked Skarabox (macOS-compatible) - we haven't fixed the fork yet
 nix run github:ibizaman/skarabox#myskarabox-get-facter -- -p /skarabox > ./myskarabox/facter.json
 
-# Option C: Manual SSH (universal fallback)
-ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=./myskarabox/known_hosts -p 22 root@$(cat ./myskarabox/ip) sudo nixos-facter > ./myskarabox/facter.json
+# Option C: Manual SSH (universal fallback) - this doesn't work because it needs nixos-facter installed on the server
+# First install nixos-facter on the server then:
+ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=./myskarabox/known_hosts -p 22 root@$(cat ./myskarabox/ip) "sudo bash -c 'source ~/.nix-profile/etc/profile.d/nix.sh && nixos-facter'" > ./myskarabox/facter.json
 ```
 
 Commit the hardware configuration:
