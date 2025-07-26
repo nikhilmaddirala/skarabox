@@ -87,3 +87,56 @@ The test suite validates complete installation workflows:
 - Static IP configuration testing
 
 Tests run in CI using KVM-enabled GitHub runners and test the complete end-to-end installation process including beacon creation, nixos-anywhere installation, ZFS encryption/decryption, and deployment.
+
+## Cross-Platform Compatibility
+
+### macOS Issues and Solutions
+
+**Problem**: Host-specific commands (e.g., `nix run .#<hostname>-gen-knownhosts-file`, `nix run .#<hostname>-get-facter`) fail on macOS with error:
+```
+Cannot build '/nix/store/...-nixpkgs-patched.drv'. Reason: required system or feature not available
+```
+
+**Root Cause**: The `mkHostPackages` function in `flakeModule.nix` was using target system packages (x86_64-linux) for host-side commands on macOS (aarch64-darwin).
+
+**Fix Applied**: Modified `flakeModule.nix` to use host system packages (`hostPkgs`) instead of target packages (`cfg'.pkgs`) for local command execution:
+```nix
+mkHostPackages = hostPkgs: name: cfg': let
+  # Commands now use hostPkgs (host system) instead of cfg'.pkgs (target system)
+```
+
+### Manual Alternatives for Cross-Platform Compatibility
+
+When automated commands fail, use these manual alternatives:
+
+#### Generate Known Hosts File
+```bash
+# Manual method (universal)
+echo "[$(cat ./myskarabox/ip)]:22 $(cat ./myskarabox/host_key.pub | cut -d' ' -f1-2)" > ./myskarabox/known_hosts
+echo "[$(cat ./myskarabox/ip)]:2222 $(cat ./myskarabox/host_key.pub | cut -d' ' -f1-2)" >> ./myskarabox/known_hosts
+```
+
+#### Hardware Detection
+```bash
+# Manual SSH method (universal)
+ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=./myskarabox/known_hosts -p 22 root@$(cat ./myskarabox/ip) sudo nixos-facter > ./myskarabox/facter.json
+```
+
+**Note**: `nixos-facter` is pre-installed in Skarabox beacon but not in Hetzner recovery mode. For recovery mode, install Nix and nixos-facter first.
+
+## SSH Key Architecture
+
+**Host Keys vs Client Keys**:
+- **Host Keys** (`myskarabox/host_key.pub`): Authenticate the server to prevent man-in-the-middle attacks
+- **Client Keys** (`myskarabox/ssh.pub`): Authenticate the user to the server for login
+
+Host keys are generated during setup and used in known_hosts files to verify server identity during SSH connections.
+
+## Troubleshooting
+
+### Common Error Patterns
+
+1. **Cross-platform build failures**: Use manual commands or run on Linux system
+2. **nixos-facter not found**: Ensure server is running Skarabox beacon, not recovery mode
+3. **SSH connection timeouts**: Verify server is accessible and SSH keys are correct
+4. **Missing host-specific commands**: Commands only exist after configuring hosts in flake
