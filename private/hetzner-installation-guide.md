@@ -80,13 +80,9 @@ nix run .#myskarabox-gen-knownhosts-file
 If both above options fail, create the known_hosts file manually:
 
 ```bash
-# Get the host key from your myskarabox/host_key.pub file
-HOST_KEY=$(cat ./myskarabox/host_key.pub | cut -d' ' -f1-2)
-IP=$(cat ./myskarabox/ip)
-
 # Create known_hosts with both SSH ports
-echo "[$IP]:22 $HOST_KEY" > ./myskarabox/known_hosts
-echo "[$IP]:2222 $HOST_KEY" >> ./myskarabox/known_hosts
+echo "[$(cat ./myskarabox/ip)]:22 $(cat ./myskarabox/host_key.pub | cut -d' ' -f1-2)" > ./myskarabox/known_hosts
+echo "[$(cat ./myskarabox/ip)]:2222 $(cat ./myskarabox/host_key.pub | cut -d' ' -f1-2)" >> ./myskarabox/known_hosts
 ```
 
 ### 2. Hardware Detection (facter.json)
@@ -94,12 +90,11 @@ echo "[$IP]:2222 $HOST_KEY" >> ./myskarabox/known_hosts
 This step runs **locally** but connects to your server to gather hardware information:
 
 ```bash
-# This command:
-# 1. SSH into your Hetzner server
-# 2. Runs nixos-facter to detect hardware
-# 3. Returns JSON hardware specification
-# 4. Saves it locally as facter.json
+# Option A: Using Nix command
 nix run .#myskarabox-get-facter > ./myskarabox/facter.json
+
+# Option B: Manual equivalent (for cross-platform issues)
+ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=./myskarabox/known_hosts -p 22 root@$(cat ./myskarabox/ip) sudo nixos-facter > ./myskarabox/facter.json
 ```
 
 **What happens during this step**:
@@ -200,8 +195,8 @@ When using Hetzner recovery mode:
 ### Cross-Platform Build Issues
 
 1. **macOS Build Error**: `Cannot build '/nix/store/...-nixpkgs-patched.drv'. Reason: required system or feature not available`
-   - **Cause**: Commands like `gen-knownhosts-file` try to build x86_64-linux packages on aarch64-darwin
-   - **Solution**: Use Option B (Server-Side Setup) or Option C (Manual Known Hosts) from Step 1
+   - **Cause**: Commands like `gen-knownhosts-file` and `get-facter` try to build x86_64-linux packages on aarch64-darwin
+   - **Solution**: Use Option B (Server-Side Setup), Option C (Manual Known Hosts), or manual SSH commands from Steps 1-2
 
 2. **Cross-Compilation Failures**:
    - Some Nix commands require building for the target system architecture
