@@ -21,7 +21,16 @@ Retrieve the IP of the server, then:
 ```bash
 echo <ip> > myskarabox/ip
 echo x86_64-linux > myskarabox/system
-nix run .#myskarabox-gen-knownhosts-file
 
 # Optionally, adjust the ./myskarabox/ssh_port and ./myskarabox/ssh_boot_port if you want to.
+```
+- Sync to git:
+
+- Go to server
+```bash
+# Install nix
+sh <(curl --proto '=https' --tlsv1.2 -L https://nixos.org/nix/install) --daemon
+exec $SHELL #restart shell
+
+nix run .#myskarabox-gen-knownhosts-file
 ```
