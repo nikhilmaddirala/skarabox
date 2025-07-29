@@ -32,6 +32,9 @@ nix run github:ibizaman/skarabox#init
 echo <ip> > myskarabox/ip
 echo x86_64-linux > myskarabox/system
 nix run .#myskarabox-gen-knownhosts-file
+
+nix run .#packages.aarch64-darwin.myskarabox-gen-knownhosts-file
+
 # Optionally, adjust the ./myskarabox/ssh_port and ./myskarabox/ssh_boot_port if you want to.
 ```
 
