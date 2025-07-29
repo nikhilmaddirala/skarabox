@@ -108,9 +108,3 @@ nixos-anywhere \
 
 ## Long term plan
 The long-term plan is to fix the Skarabox fork to work on macOS hosts, so that we can use the original instructions without workarounds. This will involve addressing cross-platform compatibility issues and ensuring that all necessary tools are available on macOS.
-
-For developing a local fork, you need to replace the commands in the instructions with the following:
-
-```bash
-nix run github:ibizaman/skarabox#myskarabox-get-facter -- -p /skarabox 
-```
