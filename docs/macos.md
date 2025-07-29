@@ -1,8 +1,8 @@
-# Bootstrapping on MacOS host
+# Bootstrapping on MacOS - Quick Start Guide 
 This doc describes workarounds for bootstrapping Skarabox on a macOS host where the official installation instructions don't work: https://github.com/ibizaman/skarabox/blob/main/docs/installation.md
 
 ## Prerequisites
-- Nix installed on the macOS host
+- Nix installed on the macOS host: https://nixos.org/download/
 - Cloud server provisioned with any Linux distribution (e.g., Ubuntu, Debian, etc.)
 
 ## Initializing the repo
@@ -22,7 +22,7 @@ nix run github:ibizaman/skarabox?ref=@VERSION@#init
 ```bash
 mkdir myskarabox
 cd myskarabox
-nix-shell --pure -p nix
+nix-shell --pure -p nix #TODO: this is fixed now
 nix run github:ibizaman/skarabox#init
 ```
 
@@ -85,7 +85,25 @@ nix run .#myskarabox-install-on-beacon
 
 ### Recommended workaround
 ```bash
-# TODO
+# Install nixos-anywhere on macOS (if not already installed)
+nix-env -iA nixpkgs.nixos-anywhere
+
+# Extract secrets manually using SOPS
+export SOPS_AGE_KEY_FILE="sops.key"
+root_passphrase=$(sops decrypt --extract ".root_passphrase" "./myskarabox/secrets.yaml")
+# If data pool is enabled, also run:
+# data_passphrase=$(sops decrypt --extract ".data_passphrase" "./myskarabox/secrets.yaml")
+
+# Run nixos-anywhere directly with manual parameters
+nixos-anywhere \
+  --flake ".#myskarabox" \
+  --ssh-port $(cat ./myskarabox/ssh_port) \
+  --ssh-option ConnectTimeout=10 \
+  --disk-encryption-keys /tmp/root_passphrase <(echo "$root_passphrase") \
+  skarabox@$(cat ./myskarabox/ip)
+  
+# For systems with data pools, add this option to the nixos-anywhere command:
+# --disk-encryption-keys /tmp/data_passphrase <(echo "$data_passphrase") \
 ```
 
 ## Long term plan
