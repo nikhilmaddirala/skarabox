@@ -65,6 +65,9 @@ nix run .#myskarabox-get-facter > ./myskarabox/facter.json
 # SSH into the server and install nix
 sh <(curl --proto '=https' --tlsv1.2 -L https://nixos.org/nix/install) --daemon
 
+# Determinate nix
+curl -fsSL https://install.determinate.systems/nix | sh -s -- install
+
 # Reset the shell to apply Nix environment
 exec $SHELL 
 
